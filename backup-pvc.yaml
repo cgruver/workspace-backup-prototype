@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Template
+metadata:
+  annotations:
+    description: "Create Backup of Dev Spaces Workspace PVC"
+    openshift.io/display-name: "Create Backup of Dev Spaces Workspace PVC"
+    template.openshift.io/bindable: "false"
+    version: "1.0"
+  name: workspace-backup
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: ${WORKSPACE_ID}-backup
+  spec:
+    ttlSecondsAfterFinished: 120
+    selector: {}
+    template:
+      metadata:
+        name: pi
+      spec:
+        containers:
+          - name: workspace-backup
+            image: quay.io/cgruver0/che/workspace-backup:latest
+            env:
+            - name: WORKSPACE_ID
+              value: ${WORKSPACE_ID}
+            - name: WORKSPACE_NAME
+              value: ${WORKSPACE_NAME}
+            - name: WORKSPACE_NAMESPACE
+              value: ${WORKSPACE_NAMESPACE}
+            - name: REGISTRY
+              value: ${REGISTRY}
+            - name: REGISTRY_AUTH_FILE
+              value: /registry.auth
+            volumeMounts:
+            - mountPath: /workspace-pvc
+              name: workspace-pvc
+        restartPolicy: Never
+        volumes:
+          - name: workspace-pvc
+            persistentVolumeClaim:
+              claimName: volume-${WORKSPACE_ID}
+parameters:
+  -
+    description: "ID of the DevWorkspace"
+    displayName: "DevWorkspace ID"
+    name: WORKSPACE_ID
+    required: true
+  -
+    description: "Name of the DevWorkspace"
+    displayName: "DevWorkspace Name"
+    name: WORKSPACE_NAME
+    required: true
+  -
+    description: "Name of the DevWorkspace Namespace"
+    displayName: "Namespace Name"
+    name: WORKSPACE_NAMESPACE
+    required: true
+  -
+    description: "Target Registry for Backup Image"
+    displayName: "Registry Name"
+    name: REGISTRY
+    required: true
