@@ -1,11 +1,12 @@
 FROM registry.access.redhat.com/ubi9:9.5
 
 ENV BUILDAH_ISOLATION=chroot
+ENV HOME=/home/user
 
 COPY --chown=0:0 entrypoint.sh /
 COPY --chown=0:0 create-backup-image.sh /
 
-RUN dnf install -y buildah ; \
+RUN dnf install -y buildah rsync ; \
   dnf update -y ; \
   dnf clean all ; \
   chgrp -R 0 /home ; \
@@ -24,3 +25,4 @@ RUN dnf install -y buildah ; \
 
 USER 1000
 ENTRYPOINT ["/entrypoint.sh"]
+CMD [ "/create-backup-image.sh" ]

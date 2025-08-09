@@ -32,15 +32,24 @@ objects:
             - name: REGISTRY
               value: ${REGISTRY}
             - name: REGISTRY_AUTH_FILE
-              value: /registry.auth
+              value: /config/registry.auth
             volumeMounts:
             - mountPath: /workspace-pvc
               name: workspace-pvc
+            - mountPath: /config
+              name: registry
         restartPolicy: Never
         volumes:
           - name: workspace-pvc
             persistentVolumeClaim:
               claimName: volume-${WORKSPACE_ID}
+          - name: registry
+            Secret:
+              name: backup-registry
+              defaultMode: 444
+              items:
+              - key: registry-auth
+                path: registry.auth
 parameters:
   -
     description: "ID of the DevWorkspace"
