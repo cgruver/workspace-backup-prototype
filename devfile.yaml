@@ -1,0 +1,86 @@
+schemaVersion: 2.2.0
+attributes:
+  controller.devfile.io/storage-type: per-workspace
+metadata:
+  name: workspace-backup-prototype
+projects:
+  - name: workspace-backup-prototype
+    git:
+      remotes:
+        origin: https://github.com/cgruver/workspace-backup-prototype.git
+      checkoutFrom:
+        remote: origin
+        revision: main
+components:
+- name: dev-tools
+  attributes:
+    pod-overrides:
+      metadata:
+        annotations:
+          io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
+      spec:
+        hostUsers: false
+    container-overrides: 
+      securityContext:
+        procMount: Unmasked
+  container:
+    image: nexus.clg.lab:5002/dev-spaces/workspace-backup-prototype:latest
+    # image: quay.io/cgruver0/che/workspace-backup-prototype:latest
+    memoryLimit: 6Gi
+    mountSources: true
+    env:
+    - name: SHELL
+      value: "/bin/zsh"
+    - name: HOME
+      value: "/projects/home"
+    - name: VSCODE_DEFAULT_WORKSPACE
+      value: "/projects/workspace-backup-prototype/workspace-backup-prototype.code-workspace"
+    - name: GOPATH
+      value: /projects/home/go
+- volume:
+    size: 20Gi
+  name: projects
+- name: restore-workspace
+  container:
+    image: nexus.clg.lab:5002/dev-spaces/workspace-backup-prototype:latest
+    sourceMapping: /projects
+    args:
+      - '-c'
+      - if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-backup.sh --restore; fi; rm ${PROJECTS_ROOT}/restore.workspace
+    command:
+      - /bin/bash
+    memoryRequest: 128Mi
+    memoryLimit: 512Mi
+    cpuRequest: 10m
+    cpuLimit: 200m
+- name: prep-workspace
+  container:
+    args:
+      - '-c'
+      - >-
+        mkdir -p /projects/bin && cp /usr/bin/oc /projects/bin/oc && cp /usr/bin/kubectl /projects/bin/kubectl && if [[ -f ${HOME}/.kube/config ]]; then rm ${HOME}/.kube/config; fi
+    command:
+      - /bin/bash
+    image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+    mountSources: true
+    sourceMapping: /projects
+    memoryRequest: 128Mi
+    memoryLimit: 256Mi
+    cpuRequest: 10m
+    cpuLimit: 200m
+    env:
+    - name: HOME
+      value: "/projects/home"
+commands:
+- apply:
+    component: restore-workspace
+    label: Restore Workspace
+  id: restore-workspace
+- apply:
+    component: prep-workspace
+    label: Pre Start Prep
+  id: prep-workspace
+events:
+  preStart:
+    - restore-workspace
+    - prep-workspace
