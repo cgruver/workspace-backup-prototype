@@ -137,6 +137,9 @@ objects:
             - name: ca-certs-merged
               readOnly: true
               mountPath: /etc/pki/ca-trust/extracted/pem
+            - name: pull-secret
+              readOnly: true
+              mountPath: /tmp/registry
         restartPolicy: Never
         volumes:
           - name: workspace-pvc
@@ -146,6 +149,12 @@ objects:
             configMap:
               name: ca-certs-merged
               defaultMode: 0644
+          - name: pull-secret
+            secret:
+              secretName: devworkspace-container-registry-dockercfg
+              items:
+                key: .dockerconfigjson
+                path: auth.json
 parameters:
   -
     description: "Name of the DevWorkspace"
