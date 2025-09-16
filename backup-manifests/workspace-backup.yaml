@@ -153,7 +153,7 @@ objects:
             secret:
               secretName: devworkspace-container-registry-dockercfg
               items:
-                key: .dockerconfigjson
+              - key: .dockerconfigjson
                 path: auth.json
 parameters:
   -
