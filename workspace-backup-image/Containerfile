@@ -5,12 +5,10 @@ ARG INSTALL_PACKAGES="shadow-utils bash jq podman buildah ca-certificates fuse-o
 
 ENV HOME=${USER_HOME_DIR}
 ENV BUILDAH_ISOLATION=chroot
-ENV REGISTRY_AUTH_FILE=/tmp/registry/auth.json
 
 COPY --chown=0:0 entrypoint.sh /
 
 RUN set -e ; \
-  dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm ; \
   dnf install -y ${INSTALL_PACKAGES} ; \
   dnf update -y ; \
   dnf clean all ; \

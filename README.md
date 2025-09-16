@@ -54,3 +54,10 @@ export WORKSPACE_NAME=che-demo-app
 export WORKSPACE_ID=storage-workspace7b26c4f551df4704
 
 ```
+
+```bash
+workspace=che-demo-app
+namespace=cgruver-devspaces
+workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"
+oc process openshift-operators//workspace-backup -p WORKSPACE_NAME=${workspace} -p WORKSPACE_NAMESPACE=${namespace} -p WORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
+```
