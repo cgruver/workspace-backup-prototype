@@ -3,7 +3,7 @@
 Experiment for backup/restore of an OpenShift Dev Spaces workspace.
 
 ```
-podman build -t nexus.clg.lab:5002/dev-spaces/workspace-backup:latest ./
+podman build -t nexus.clg.lab:5002/dev-spaces/workspace-backup:latest ./workspace-backup-image
 ```
 
 Test Pod -

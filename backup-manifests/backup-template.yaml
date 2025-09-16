@@ -11,51 +11,38 @@ objects:
 - apiVersion: batch/v1
   kind: Job
   metadata:
-    name: ${WORKSPACE_ID}-backup
+    name: ${WORKSPACE_NAME}-${WORKSPACE_NAMESPACE}-backup
   spec:
     ttlSecondsAfterFinished: 120
     selector: {}
     template:
       metadata:
-        name: pi
+        name: ${WORKSPACE_NAME}-${WORKSPACE_NAMESPACE}-backup
+        annotations:
+          io.kubernetes.cri-o.Devices: "/dev/fuse,/dev/net/tun"
       spec:
+        hostUsers: false
         containers:
           - name: workspace-backup
             image: quay.io/cgruver0/che/workspace-backup:latest
+            securityContext:
+              procMount: Unmasked
             env:
-            - name: WORKSPACE_ID
-              value: ${WORKSPACE_ID}
             - name: WORKSPACE_NAME
               value: ${WORKSPACE_NAME}
             - name: WORKSPACE_NAMESPACE
               value: ${WORKSPACE_NAMESPACE}
-            - name: REGISTRY
-              value: ${REGISTRY}
-            - name: REGISTRY_AUTH_FILE
-              value: /config/registry.auth
+            - name: WORKSPACE_REGISTRY
+              value: ${WORKSPACE_REGISTRY}
             volumeMounts:
             - mountPath: /workspace-pvc
               name: workspace-pvc
-            - mountPath: /config
-              name: registry
         restartPolicy: Never
         volumes:
           - name: workspace-pvc
             persistentVolumeClaim:
-              claimName: volume-${WORKSPACE_ID}
-          - name: registry
-            Secret:
-              name: backup-registry
-              defaultMode: 444
-              items:
-              - key: registry-auth
-                path: registry.auth
+              claimName: ${WORKSPACE_PVC}
 parameters:
-  -
-    description: "ID of the DevWorkspace"
-    displayName: "DevWorkspace ID"
-    name: WORKSPACE_ID
-    required: true
   -
     description: "Name of the DevWorkspace"
     displayName: "DevWorkspace Name"
@@ -67,7 +54,13 @@ parameters:
     name: WORKSPACE_NAMESPACE
     required: true
   -
-    description: "Target Registry for Backup Image"
-    displayName: "Registry Name"
-    name: REGISTRY
+    description: "PVC for the DevWorkspace"
+    displayName: "DevWorkspace PVC"
+    name: WORKSPACE_PVC
     required: true
+  -
+    description: "Target Registry for Backup Image"
+    displayName: "Backup Registry Name"
+    name: WORKSPACE_REGISTRY
+    required: true
+    value: "nexus.clg.lab:5002/dev-spaces"

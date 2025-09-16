@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: devworkspace-backup
+  namespace: openshift-operators
+spec:
+  schedule: "0 0 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes: 
+          - name: script
+            configMap:
+              name: devworkspace-backup
+              defaultMode: 0555
+              items:
+              - key: devworkspace-backup
+                path: devworkspace-backup.sh
+          restartPolicy: OnFailure
+          serviceAccount: devworkspace-controller-serviceaccount
+          containers:
+          - name: openshift-cli
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            env:
+            - name: LAST_START
+              # 24 hours
+              value: "86400"
+            command:
+            - /script/devworkspace-backup.sh
+            resources:
+              requests:
+                cpu: 100m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
+            volumeMounts:
+            - mountPath: /script
+              name: script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devworkspace-backup
+  namespace: openshift-operators
+data:
+  devworkspace-backup: |
+    #!/usr/bin/env bash
+    current_time=$(date +%s)
+    for namespace in $(oc get namespaces -l app.kubernetes.io/component=workspaces-namespace  -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
+    do
+      for workspace in $(oc get devworkspaces -n ${namespace} -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+      do
+        last_start=$(date -d$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{range .status.conditions}}{{if eq .type "Started"}}{{.lastTransitionTime}}{{end}}{{end}}') +%s)
+        workspace_age=$(( ${current_time} - ${last_start} ))
+        if [[ ${workspace_age} -lt  ${LAST_START} ]]
+        then
+          workspace_status=$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')
+          if [[ "${workspace_status}" == "Stopped" ]]
+          then
+            echo "Backing Up Workspace: ${workspace} in ${namespace}"
+            workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"
+            oc process workspace-backup -p WORKSPACE_NAME=${workspace} -p WORKSPACE_NAMESPACE=${namespace} -p WORKSPACE_PVC=${workspace_pvc} | oc apply -f -
+          fi
+        fi
+      done
+      let ws_count=$(oc get devworkspace --no-headers -n ${namespace} | wc -l)
+      if [[ ${ws_count} -eq 0 ]]
+      then
+        echo "Removing empty Dev Spaces User Namespace: ${namespace}"
+        oc delete projects ${namespace}
+      fi
+    done
+---
