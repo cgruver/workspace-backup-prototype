@@ -125,18 +125,18 @@ objects:
             volumeMounts:
             - mountPath: /workspace-pvc
               name: workspace-pvc
-            - name: ca-certs
+            - name: ca-certs-merged
               readOnly: true
-              mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+              mountPath: /etc/pki/ca-trust/extracted/pem
         restartPolicy: Never
         volumes:
           - name: workspace-pvc
             persistentVolumeClaim:
               claimName: ${DEVWORKSPACE_PVC}
-          - name: ca-certs
+          - name: ca-certs-merged
             configMap:
-              name: ca-certs
-              defaultMode: 416
+              name: ca-certs-merged
+              defaultMode: 0644
 parameters:
   -
     description: "Name of the DevWorkspace"
