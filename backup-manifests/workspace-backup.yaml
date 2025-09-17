@@ -134,7 +134,7 @@ objects:
               value: ${DEVWORKSPACE_NAMESPACE}
             - name: DEVWORKSPACE_BACKUP_REGISTRY
               value: ${DEVWORKSPACE_BACKUP_REGISTRY}
-            - name: ENV REGISTRY_AUTH_FILE
+            - name: REGISTRY_AUTH_FILE
               value: /tmp/registry/auth.json
             volumeMounts:
             - mountPath: /workspace-pvc

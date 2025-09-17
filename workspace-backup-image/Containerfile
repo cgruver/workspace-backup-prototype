@@ -8,6 +8,7 @@ ENV BUILDAH_ISOLATION=chroot
 
 
 COPY --chown=0:0 entrypoint.sh /
+COPY --chown=0:0 workspace-recovery.sh /
 
 RUN set -e ; \
   dnf install -y ${INSTALL_PACKAGES} ; \
@@ -18,6 +19,7 @@ RUN set -e ; \
   (echo '[storage]';echo 'driver = "overlay"';echo 'graphroot = "/tmp/graphroot"';echo '[storage.options.overlay]';echo 'mount_program = "/usr/bin/fuse-overlayfs"') > ${USER_HOME_DIR}/.config/containers/storage.conf ; \
   chown -R 1000:1000 ${USER_HOME_DIR} ; \
   chmod +x /entrypoint.sh ; \
+  chmod +x /workspace-recovery.sh ; \
   echo "user:x:1000:0:devspaces user:${USER_HOME_DIR}:/bin/bash" >> /etc/passwd ; \
   echo "user:x:1000:" >> /etc/group ; \
   echo "user:1001:64535" >> /etc/subuid ; \
