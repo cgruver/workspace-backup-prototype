@@ -59,6 +59,8 @@ components:
     env:
       - name: REGISTRY_AUTH_FILE
         value: /tmp/registry/auth.json
+      - name: DEVWORKSPACE_BACKUP_REGISTRY
+        value: nexus.clg.lab:5002/dev-spaces
 - name: prep-workspace
   container:
     args:

@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+set -x
+set -e
+
 function backup() {
   BACKUP_IMAGE=${DEVWORKSPACE_BACKUP_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
   NEW_IMAGE=$(buildah from scratch)
@@ -10,7 +15,7 @@ function backup() {
 }
 
 function restore() {
-  BACKUP_IMAGE=${WORKSPACE_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
+  BACKUP_IMAGE=${DEVWORKSPACE_BACKUP_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
   podman create --name workspace-restore ${BACKUP_IMAGE}
   rm -rf ${PROJECTS_ROOT}
   mkdir -p ${PROJECTS_ROOT}
