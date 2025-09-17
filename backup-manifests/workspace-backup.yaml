@@ -48,6 +48,8 @@ metadata:
 data:
   devworkspace-backup: |
     #!/usr/bin/env bash
+    set -x
+    set -e
     current_time=$(date +%s)
     for namespace in $(oc get namespaces -l app.kubernetes.io/component=workspaces-namespace  -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
     do
