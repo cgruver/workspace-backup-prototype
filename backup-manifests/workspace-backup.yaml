@@ -57,12 +57,13 @@ data:
         workspace_age=$(( ${current_time} - ${last_start} ))
         if [[ ${workspace_age} -lt  ${LAST_START} ]]
         then
-          workspace_status=$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')
+          workspace_status=$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.phase}}')
           if [[ "${workspace_status}" == "Stopped" ]]
           then
             echo "Backing Up Workspace: ${workspace} in ${namespace}"
             workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"
-            oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
+            ### Note - this does not work yet.  
+            # oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
           fi
         fi
       done

@@ -36,6 +36,8 @@ This will install the following -
 
 1. A CronJob runs in the namespace where the Dev Workspace Operator is installed.
 
+   __Note:__ The CronJob does not work yet.  It needs a custom service account with some role bindings.
+
 1. The CronJob inspects all Dev Spaces namespaces for DevWorkspaces that have been started within a configurable amount of time.  i.e. the last 24 hours.
 
 1. The CronJob will extract necessary metadata on the DevWorkspace to be backed up and then instantiate a Template which creates a Job in the namespace of the DevWorkspace that runs a backup routine.
@@ -58,6 +60,55 @@ The backup image is named `backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}
 
 1. The user restarts the workspace which will trigger recovery from the backup container image.
 
+__Note:__ For the recovery flow in this prototype, some entries need to be made to a users devfile.yaml
+
+A `component` to run the restore logic:  (Replace `DEVWORKSPACE_BACKUP_REGISTRY` with the value used in the install manifests)
+
+```yaml
+components:
+- name: restore-workspace
+  attributes:
+    container-overrides: 
+      securityContext:
+        procMount: Unmasked
+  container:
+    image: quay.io/cgruver0/che/workspace-backup:latest
+    # image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
+    sourceMapping: /projects
+    command:
+      - /bin/bash
+    args:
+      - '-c'
+      - >-
+        set -x; set -e; if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-recovery.sh --restore; fi
+    memoryRequest: 128Mi
+    memoryLimit: 2Gi
+    cpuRequest: 10m
+    cpuLimit: "1"
+    env:
+      - name: REGISTRY_AUTH_FILE
+        value: /tmp/registry/auth.json
+      - name: DEVWORKSPACE_BACKUP_REGISTRY
+        value: your-registry.org:5000/target/for/backups
+```
+
+An `apply` command for the restore logic:
+
+```yaml
+commands:
+- apply:
+    component: restore-workspace
+    label: Restore Workspace
+  id: restore-workspace
+```
+
+A pre-start `event` to run the restore command as an init-container.
+
+```yaml
+events:
+  preStart:
+    - restore-workspace
+```
 
 ```
 podman build -t nexus.clg.lab:5002/dev-spaces/workspace-backup:latest ./workspace-backup-image
