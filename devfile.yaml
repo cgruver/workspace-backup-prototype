@@ -24,8 +24,8 @@ components:
       securityContext:
         procMount: Unmasked
   container:
-    image: nexus.clg.lab:5002/dev-spaces/workspace-backup-prototype:latest
-    # image: quay.io/cgruver0/che/workspace-backup-prototype:latest
+    image: nexus.clg.lab:5002/dev-spaces/workspace-base:latest
+    # image: nexus.clg.lab:5002/dev-spaces/workspace-base:latest
     memoryLimit: 6Gi
     mountSources: true
     env:
@@ -35,8 +35,6 @@ components:
       value: "/projects/home"
     - name: VSCODE_DEFAULT_WORKSPACE
       value: "/projects/workspace-backup-prototype/workspace-backup-prototype.code-workspace"
-    - name: GOPATH
-      value: /projects/home/go
 - volume:
     size: 20Gi
   name: projects
