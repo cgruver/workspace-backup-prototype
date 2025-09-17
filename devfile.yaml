@@ -39,10 +39,17 @@ components:
     size: 20Gi
   name: projects
 - name: restore-workspace
+  attributes:
+    container-overrides: 
+      securityContext:
+        procMount: Unmasked
   container:
     image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
     sourceMapping: /projects
+    command:
+      - /bin/bash
     args:
+      - '-c'
       - >-
         if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-recovery.sh --restore; fi; rm ${PROJECTS_ROOT}/restore.workspace
     memoryRequest: 128Mi
