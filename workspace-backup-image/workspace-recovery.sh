@@ -17,8 +17,8 @@ function backup() {
 function restore() {
   BACKUP_IMAGE=${DEVWORKSPACE_BACKUP_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
   podman create --name workspace-restore ${BACKUP_IMAGE}
-  rm -rf ${PROJECTS_ROOT}/*.*
-  podman cp workspace-restore:/ ${PROJECTS_ROOT}
+  rm -rf ${PROJECTS_ROOT}/*
+  podman cp workspace-restore:/ /
 }
 
 for i in "$@"
