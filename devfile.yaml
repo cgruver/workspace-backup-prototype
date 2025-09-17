@@ -51,7 +51,7 @@ components:
     args:
       - '-c'
       - >-
-        if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-recovery.sh --restore; fi; rm ${PROJECTS_ROOT}/restore.workspace
+        if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-recovery.sh --restore; rm ${PROJECTS_ROOT}/restore.workspace; fi
     memoryRequest: 128Mi
     memoryLimit: 2Gi
     cpuRequest: 10m
