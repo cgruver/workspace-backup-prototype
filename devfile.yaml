@@ -42,17 +42,18 @@ components:
   name: projects
 - name: restore-workspace
   container:
-    image: nexus.clg.lab:5002/dev-spaces/workspace-backup-prototype:latest
+    image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
     sourceMapping: /projects
     args:
-      - '-c'
-      - if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-backup.sh --restore; fi; rm ${PROJECTS_ROOT}/restore.workspace
-    command:
-      - /bin/bash
+      - >-
+        if [[ -f ${PROJECTS_ROOT}/restore.workspace ]]; then /workspace-recovery.sh --restore; fi; rm ${PROJECTS_ROOT}/restore.workspace
     memoryRequest: 128Mi
-    memoryLimit: 512Mi
+    memoryLimit: 2Gi
     cpuRequest: 10m
-    cpuLimit: 200m
+    cpuLimit: "1"
+    env:
+      - name: REGISTRY_AUTH_FILE
+        value: /tmp/registry/auth.json
 - name: prep-workspace
   container:
     args:

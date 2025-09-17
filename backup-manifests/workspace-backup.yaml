@@ -105,6 +105,9 @@ objects:
           - name: workspace-backup
             image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
             #  image: quay.io/cgruver0/che/workspace-backup:latest
+            args:
+            - '/workspace-recovery.sh'
+            - '--backup'
             resources:
               limits:
                 cpu: '1'
@@ -131,6 +134,8 @@ objects:
               value: ${DEVWORKSPACE_NAMESPACE}
             - name: DEVWORKSPACE_BACKUP_REGISTRY
               value: ${DEVWORKSPACE_BACKUP_REGISTRY}
+            - name: ENV REGISTRY_AUTH_FILE
+              value: /tmp/registry/auth.json
             volumeMounts:
             - mountPath: /workspace-pvc
               name: workspace-pvc
