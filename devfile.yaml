@@ -24,7 +24,7 @@ components:
       securityContext:
         procMount: Unmasked
   container:
-    image: nexus.clg.lab:5002/dev-spaces/workspace-base:latest
+    image: quay.io/cgruver0/che/workspace-base:latest
     # image: nexus.clg.lab:5002/dev-spaces/workspace-base:latest
     memoryLimit: 6Gi
     mountSources: true
@@ -44,7 +44,8 @@ components:
       securityContext:
         procMount: Unmasked
   container:
-    image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
+    image: quay.io/cgruver0/che/workspace-backup:latest
+    # image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
     sourceMapping: /projects
     command:
       - /bin/bash

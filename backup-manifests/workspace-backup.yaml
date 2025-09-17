@@ -1,4 +1,3 @@
-
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
@@ -103,8 +102,8 @@ objects:
         serviceAccount: devworkspace-backup-serviceaccount
         containers:
           - name: workspace-backup
-            image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
-            #  image: quay.io/cgruver0/che/workspace-backup:latest
+            # image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
+            image: quay.io/cgruver0/che/workspace-backup:latest
             args:
             - '/workspace-recovery.sh'
             - '--backup'
@@ -181,7 +180,6 @@ parameters:
     displayName: "Backup Registry Name"
     name: DEVWORKSPACE_BACKUP_REGISTRY
     required: true
-    value: "nexus.clg.lab:5002/dev-spaces"
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -214,6 +212,8 @@ spec:
             - name: LAST_START
               # 24 hours
               value: "86400"
+            - name: DEVWORKSPACE_BACKUP_REGISTRY
+              value: your-registry.org:5000/target/for/backups
             command:
             - /script/devworkspace-backup.sh
             resources:
