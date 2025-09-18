@@ -96,7 +96,7 @@ data:
           then
             echo "Backing Up Workspace: ${workspace} in ${namespace}"
             workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"  
-            oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
+            oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} -p DEVWORKSPACE_BACKUP_REGISTRY=${DEVWORKSPACE_BACKUP_REGISTRY} | oc apply -n ${namespace} -f -
           fi
         fi
       done
@@ -230,7 +230,7 @@ spec:
               - key: devworkspace-backup
                 path: devworkspace-backup.sh
           restartPolicy: OnFailure
-          serviceAccount: devworkspace-controller-serviceaccount
+          serviceAccount: devworkspace-backup-controller
           containers:
           - name: openshift-cli
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
@@ -239,7 +239,7 @@ spec:
               # One Hour
               value: "3600"
             - name: DEVWORKSPACE_BACKUP_REGISTRY
-              value: your-registry.org:5000/target/for/backups
+              value: nexus.clg.lab:5002/dev-spaces
             command:
             - /script/devworkspace-backup.sh
             resources:
