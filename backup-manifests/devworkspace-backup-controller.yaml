@@ -1,50 +1,82 @@
-apiVersion: template.openshift.io/v1
-kind: Template
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: devworkspace-backup-service-account-config
+  name: devworkspace-backup-controller
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: devworkspace-backup-controller
+rules:
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - patch
+      - update
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - patch
+      - update
+  - apiGroups:
+      - ''
+      - template.openshift.io
+    resources:
+      - processedtemplates
+      - templateconfigs
+      - templateinstances
+      - templates
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - workspace.devfile.io
+    resources:
+      - devworkspaces
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ''
+    resources:
+      -  namespaces
+    verbs:
+      - get
+      - list
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: devworkspace-backup-controller
   namespace: devspaces
-  labels:
-    app.kubernetes.io/part-of: che.eclipse.org
-    app.kubernetes.io/component: workspaces-config
-objects:
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: devworkspace-backup-serviceaccount
-  secrets:
-  - name: devworkspace-container-registry-dockercfg
-  imagePullSecrets:
-  - name: devworkspace-container-registry-dockercfg
-- kind: Role
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: devworkspace-backup-use-nested-podman-scc
-  rules:
-    - verbs:
-        - use
-      apiGroups:
-        - security.openshift.io
-      resources:
-        - securitycontextconstraints
-      resourceNames:
-        - nested-podman-scc
-- kind: RoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: devworkspace-backup-use-nested-podman-scc
-  subjects:
-    - kind: ServiceAccount
-      name: devworkspace-backup-serviceaccount
-  roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: Role
-    name: devworkspace-backup-use-nested-podman-scc
+subjects:
+  - kind: ServiceAccount
+    name: devworkspace-backup-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: devworkspace-backup-controller
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: devworkspace-backup
-  namespace: openshift-operators
 data:
   devworkspace-backup: |
     #!/usr/bin/env bash
@@ -63,9 +95,8 @@ data:
           if [[ "${workspace_status}" == "Stopped" ]]
           then
             echo "Backing Up Workspace: ${workspace} in ${namespace}"
-            workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"
-            ### Note - this does not work yet.  
-            # oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
+            workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"  
+            oc process workspace-backup -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
           fi
         fi
       done
@@ -80,7 +111,6 @@ metadata:
     template.openshift.io/bindable: "false"
     version: "1.0"
   name: workspace-backup
-  namespace: openshift-operators
 objects:
 - apiVersion: batch/v1
   kind: Job
@@ -181,8 +211,7 @@ parameters:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: devworkspace-backup
-  namespace: openshift-operators
+  name: devworkspace-backup-controller
 spec:
   schedule: "0 0 * * *"
   successfulJobsHistoryLimit: 3
@@ -223,3 +252,44 @@ spec:
             volumeMounts:
             - mountPath: /script
               name: script
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: devworkspace-backup-service-account-config
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-config
+objects:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: devworkspace-backup-serviceaccount
+  secrets:
+  - name: devworkspace-container-registry-dockercfg
+  imagePullSecrets:
+  - name: devworkspace-container-registry-dockercfg
+- kind: Role
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: devworkspace-backup-use-nested-podman-scc
+  rules:
+    - verbs:
+        - use
+      apiGroups:
+        - security.openshift.io
+      resources:
+        - securitycontextconstraints
+      resourceNames:
+        - nested-podman-scc
+- kind: RoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: devworkspace-backup-use-nested-podman-scc
+  subjects:
+    - kind: ServiceAccount
+      name: devworkspace-backup-serviceaccount
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: devworkspace-backup-use-nested-podman-scc
