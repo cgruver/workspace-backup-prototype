@@ -2,11 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: devworkspace-backup-controller
+  namespace: devspaces
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: devworkspace-backup-controller
+  namespace: devspaces
 rules:
   - apiGroups:
       - batch
@@ -67,6 +69,7 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: devworkspace-backup-controller
+  namespace: devspaces
 subjects:
   - kind: ServiceAccount
     name: devworkspace-backup-controller
@@ -80,6 +83,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: devworkspace-backup
+  namespace: devspaces
 data:
   devworkspace-backup: |
     #!/usr/bin/env bash
@@ -114,6 +118,7 @@ metadata:
     template.openshift.io/bindable: "false"
     version: "1.0"
   name: workspace-backup
+  namespace: devspaces
 objects:
 - apiVersion: batch/v1
   kind: Job
@@ -215,6 +220,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: devworkspace-backup-controller
+  namespace: devspaces
 spec:
   schedule: "0 * * * *"
   successfulJobsHistoryLimit: 3
@@ -260,6 +266,7 @@ apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
   name: devworkspace-backup-service-account-config
+  namespace: devspaces
   labels:
     app.kubernetes.io/part-of: che.eclipse.org
     app.kubernetes.io/component: workspaces-config
