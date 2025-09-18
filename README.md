@@ -6,6 +6,13 @@ This project is a prototype for creating a mechanism to backup and restore the c
 
 The problem that this project is trying to solve is - A cluster wide outage has occurred rendering Dev Spaces inaccessible.  Users will log into a secondary cluster and restore their workspaces to the backed up state.
 
+## Backup Logic
+
+```text
+Search all Dev Spaces user namespaces for DevWorkspaces that are currently Stopped
+If the workspace was stopped within the last hour, then make a backup of it's PVC contents
+```
+
 ## Requirements to run this prototype -
 
 * An OpenShift 4.18+ cluster with Dev Spaces 3.23+ with User Namespaces support enabled [https://github.com/cgruver/ocp-4-18-nested-container-tech-preview](https://github.com/cgruver/ocp-4-18-nested-container-tech-preview)
@@ -26,11 +33,11 @@ This will install the following -
 
 * A Template in the Dev Spaces namespace which will create a service account in each users namespace.
 
-* A Template in the OpenShift Operators namespace which is used to create the backup Jobs.
+* A Template in the Dev Spaces namespace which is used to create the backup Jobs.
 
-* A ConfigMap in the OpenShift Operators namespace with the logic for parsing DevWorkspaces and creating backup Jobs
+* A ConfigMap in the Dev Spaces namespace with the logic for parsing DevWorkspaces and creating backup Jobs
 
-* A CronJob which is configured to run every 24 hours and execute the backup logic
+* A CronJob which is configured to run every hour and execute the backup logic
 
 ## Workspace backup flow -
 
@@ -38,13 +45,13 @@ This will install the following -
 
    __Note:__ The CronJob does not work yet.  It needs a custom service account with some role bindings.
 
-1. The CronJob inspects all Dev Spaces namespaces for DevWorkspaces that have been started within a configurable amount of time.  i.e. the last 24 hours.
+1. The CronJob inspects all Dev Spaces namespaces for DevWorkspaces that have been stopped within a configurable amount of time.  i.e. the last hour.
 
 1. The CronJob will extract necessary metadata on the DevWorkspace to be backed up and then instantiate a Template which creates a Job in the namespace of the DevWorkspace that runs a backup routine.
 
 1. The backup routine mounts the PVC of the DevWorkspace
 
-1. The backup routine uses Buildah to create a FROM Scratch image containing the contents of the ${PROJECTS_ROOT} of the DevWorkspace.
+1. The backup routine uses Buildah to create a `FROM Scratch` image containing the contents of the `${PROJECTS_ROOT}` of the DevWorkspace.
 
 1. The backup image is pushed to an external image registry using credentials within the namespace.
 

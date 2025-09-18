@@ -94,12 +94,12 @@ data:
     do
       for workspace in $(oc get devworkspaces -n ${namespace} -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
       do
-        last_start=$(date -d$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{range .status.conditions}}{{if eq .type "Started"}}{{.lastTransitionTime}}{{end}}{{end}}') +%s)
-        workspace_age=$(( ${current_time} - ${last_start} ))
-        if [[ ${workspace_age} -lt  ${LAST_START} ]]
+        workspace_status=$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.phase}}')
+        if [[ "${workspace_status}" == "Stopped" ]]
         then
-          workspace_status=$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.phase}}')
-          if [[ "${workspace_status}" == "Stopped" ]]
+          stop_time=$(date -d$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{range .status.conditions}}{{if eq .type "Started"}}{{.lastTransitionTime}}{{end}}{{end}}') +%s)
+          stop_span=$(( ${current_time} - ${stop_time} ))
+          if [[ ${stop_span} -lt  ${SCAN_PERIOD} ]]
           then
             echo "Backing Up Workspace: ${workspace} in ${namespace}"
             workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"  
@@ -244,7 +244,7 @@ spec:
           - name: openshift-cli
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             env:
-            - name: LAST_START
+            - name: SCAN_PERIOD
               # One Hour
               value: "3600"
             - name: DEVWORKSPACE_BACKUP_REGISTRY
