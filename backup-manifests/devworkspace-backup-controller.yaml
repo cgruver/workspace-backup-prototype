@@ -64,10 +64,10 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: devworkspace-backup-controller
-  namespace: devspaces
 subjects:
   - kind: ServiceAccount
     name: devworkspace-backup-controller
+    namespace: devspaces
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -213,7 +213,7 @@ kind: CronJob
 metadata:
   name: devworkspace-backup-controller
 spec:
-  schedule: "0 0 * * *"
+  schedule: "0 * * * *"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   concurrencyPolicy: Forbid
@@ -236,8 +236,8 @@ spec:
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             env:
             - name: LAST_START
-              # 24 hours
-              value: "86400"
+              # One Hour
+              value: "3600"
             - name: DEVWORKSPACE_BACKUP_REGISTRY
               value: your-registry.org:5000/target/for/backups
             command:
