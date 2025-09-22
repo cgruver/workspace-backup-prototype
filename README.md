@@ -15,7 +15,7 @@ This will eliminate the need to maintain RBAC to an external registry for every 
 
 ## Assumptions
 
-* Only data under ${PROJECTS_ROOT} is backed up.
+* Only data under `${PROJECTS_ROOT}` is backed up.
 
 ## Backup Logic
 
