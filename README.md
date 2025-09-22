@@ -6,6 +6,17 @@ This project is a prototype for creating a mechanism to backup and restore the c
 
 The problem that this project is trying to solve is - A cluster wide outage has occurred rendering Dev Spaces inaccessible.  Users will log into a secondary cluster and restore their workspaces to the backed up state.
 
+## TODO
+
+* Investigate pushing images to the internal registry with namespace scoped access.
+* Investigate mirroring images to another cluster's internal registry with the same namespace mapping.
+
+This will eliminate the need to maintain RBAC to an external registry for every dev spaces user, but restrict access to backup images.
+
+## Assumptions
+
+* Only data under ${PROJECTS_ROOT} is backed up.
+
 ## Backup Logic
 
 ```text

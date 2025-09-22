@@ -137,8 +137,8 @@ objects:
         serviceAccount: devworkspace-backup-serviceaccount
         containers:
           - name: workspace-backup
-            # image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
-            image: quay.io/cgruver0/che/workspace-backup:latest
+            image: nexus.clg.lab:5002/dev-spaces/workspace-backup:latest
+            # image: quay.io/cgruver0/che/workspace-backup:latest
             args:
             - '/workspace-recovery.sh'
             - '--backup'

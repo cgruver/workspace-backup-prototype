@@ -6,7 +6,7 @@ set -e
 function backup() {
   BACKUP_IMAGE=${DEVWORKSPACE_BACKUP_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
   NEW_IMAGE=$(buildah from scratch)
-  buildah copy ${NEW_IMAGE} /workspace-pvc/ /
+  buildah copy ${NEW_IMAGE} /workspace-pvc/projects/ /
   buildah config --label DEVWORKSPACE=${DEVWORKSPACE_NAME} ${NEW_IMAGE}
   buildah config --label NAMESPACE=${DEVWORKSPACE_NAMESPACE} ${NEW_IMAGE}
   buildah commit ${NEW_IMAGE} ${BACKUP_IMAGE}
@@ -18,7 +18,7 @@ function restore() {
   BACKUP_IMAGE=${DEVWORKSPACE_BACKUP_REGISTRY}/backup-${DEVWORKSPACE_NAMESPACE}-${DEVWORKSPACE_NAME}:latest
   podman create --name workspace-restore ${BACKUP_IMAGE}
   rm -rf ${PROJECTS_ROOT}/*
-  podman cp workspace-restore:${PROJECTS_ROOT}/. ${PROJECTS_ROOT}
+  podman cp workspace-restore:/. ${PROJECTS_ROOT}
 }
 
 for i in "$@"
