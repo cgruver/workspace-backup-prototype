@@ -139,3 +139,12 @@ namespace=cgruver-devspaces
 workspace_pvc="storage-$(oc get devworkspace ${workspace} -n ${namespace} -o go-template='{{.status.devworkspaceId}}')"
 oc process openshift-operators//workspace-backup -p DEVWORKSPACE_BACKUP_REGISTRY=${registry} -p DEVWORKSPACE_NAME=${workspace} -p DEVWORKSPACE_NAMESPACE=${namespace} -p DEVWORKSPACE_PVC=${workspace_pvc} | oc apply -n ${namespace} -f -
 ```
+
+## Prototype for pushing backup images to another cluster
+
+Expose the internal registry
+
+```bash
+oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+```
+
